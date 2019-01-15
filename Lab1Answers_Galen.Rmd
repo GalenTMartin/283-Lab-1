@@ -1,0 +1,113 @@
+---
+title: "283 Lab 1"
+author: "Galen M"
+date: "January 10, 2019"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+# Lab 1: Tidyverse
+
+## Tibbles
+
+ * code to make a tibble manually:
+ 
+```{r results='hide', message=FALSE, warning=FALSE}
+library(tidyverse, quietly = TRUE)
+a <- LETTERS[1:4]
+b <- 1:4
+tibble(a, b)
+```
+
+1. You can tell that an object is a tibble by printing it. A tibble will show the type of each column, and only print the first 10 rows.
+
+2. One way that subsetting works differently in tibbles than in dataframes is that subsetting by column name in dataframes will work even if you use an incomplete name for a column. In the given examples:
+```{R}
+df <- data.frame(abc = 1, xyz = "a")
+df$x
+```
+df$x subsets the dataframe "df" by column name. There is no column named "x", but R allows x to stand for the column "xyz". This could cause frustration if you meant to subset a column named "x" without realizing that it doesn't actually exist.
+
+4. 
+ * Extractiong variable 1: 
+```{R}
+annoying <- tibble(
+  `1` = 1:10,
+  `2` = `1` * 2 + rnorm(length(`1`))
+)
+annoying[[1,1]]
+```
+ * Plotting 1 and 2:
+```{R}
+plot(annoying[[1]], annoying[[2]])
+```
+ 
+ * Making a new column "3" which is 2/1
+```{R}
+annoying$`3` = annoying[[2]]/annoying[[1]]
+annoying
+```
+
+ * Rename columns to One, Two, and Three:
+```{r results='hide', message=FALSE, warning=FALSE}
+annoying %>% dplyr::rename(One = `1`, Two = `2`, Three = `3`)
+```
+
+5. "tibble::enframe()" will convert vectors to two-column data frames. This might allow you to take out dimensions of a vector (for example, you could use the name column to easily pull out "d" as the the fourth letter of the alphabet). Also, sometimes you just need things to be in dataframes.
+
+6. The "n_extra" option determines this. 
+
+## readr
+
+1. To read files with a "|" separator, just use "readr::read_delim" with the option delim = "|"
+
+2. From the documentation:
+
+read_csv(file, col_names = TRUE, col_types = NULL,
+  locale = default_locale(), na = c("", "NA"), quoted_na = TRUE,
+  quote = "\"", comment = "", trim_ws = TRUE, skip = 0, n_max = Inf,
+  guess_max = min(1000, n_max), progress = show_progress())
+
+read_tsv(file, col_names = TRUE, col_types = NULL,
+  locale = default_locale(), na = c("", "NA"), quoted_na = TRUE,
+  quote = "\"", comment = "", trim_ws = TRUE, skip = 0, n_max = Inf,
+  guess_max = min(1000, n_max), progress = show_progress())
+
+4. If you want to use read_delim() for "x,y\n1,'a,b'", you'll have to specify delim = "," and quote = "'"
+
+## Tidy data
+
+3. To create the rate plot, we first have to filter out all of the rows that contain counts of total population using:
+```{r}
+filter(tidyr::table2, 
+       type == "cases")
+```
+
+2. This code fails because the numbers need to be encamsulated in backticks. 
+```{r}
+table4a %>% 
+  gather(`1999`, `2000`, key = "year", value = "cases")
+```
+
+## Relational data
+
+1. A surrogate key can be created using the mutate() function:
+```{r}
+library(nycflights13)
+mutate(flights, flightkey = row_number())
+```
+
+2. Origin and departure locations can be collated onto flights with the following:
+```{r}
+locations <- select(airports,
+                    faa, 
+                    lat, 
+                    lon)
+
+print(flights) %>% 
+  left_join(locations, by = c("origin" = "faa")) %>% 
+  left_join(locations, by = c("dest" = "faa"))
+```
+
